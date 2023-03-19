@@ -22,7 +22,7 @@ Clone
   git clone https://github.com/187Online/Bully.git
 ```
 
--Go to project File
+Go to project File
 ```bash
   cd my-project
 ```
