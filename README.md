@@ -11,7 +11,7 @@ Bully python DoS attack tool
 * Get flood
 * PPS
 * Post flood
-* SSL dos(experimental)
+* SSL DoS(experimental)
 
 
 ## Usage
