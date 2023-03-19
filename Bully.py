@@ -783,7 +783,7 @@ def SSL_dos(target: str,port: int=443) :
                   
 if __name__ == "__main__": 
     
-    getbanner
+    getbanner()
     
     parser = argparse.ArgumentParser(description='Bully DDoS Tool CLI')
     
