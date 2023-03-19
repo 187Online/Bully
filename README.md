@@ -7,7 +7,7 @@ Bully python DoS attack tool
 * ICMP bomb
 * Ping flood
 * Smurf attack 
-* Slowlori
+* Slowloris
 * Get flood
 * PPS
 * Post flood
