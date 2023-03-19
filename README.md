@@ -35,7 +35,7 @@ Start Bully
   
 Usage
 ```bash
-  python Bully.py -pps -tR https://ww.example.com -sC 10 -p 443 -proxy
+  python Bully.py -pps -tR https://www.example.com -sC 10 -p 443 -proxy
 ```
 
 ## Lisans
