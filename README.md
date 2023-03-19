@@ -1,7 +1,7 @@
 
 # Bully
 
-Bully python DoS attack tool 
+Bully Python DoS Attack Tool 
 * UDP storm 
 * SYN flood
 * ICMP bomb
