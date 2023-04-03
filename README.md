@@ -22,7 +22,7 @@ Bully Python DoS Attack Tool
 * The HTTP packet feature has been updated.
 * The overall structure has been converted to object-oriented programming.
 * The XML-RPC feature has been added.
-* Argparse" has been removed, and instead, a selection is provided using the "input" function
+* Argparse has been removed, and instead, a selection is provided using the "input" function
 * Threaded Killer version comming soon 
 
 
