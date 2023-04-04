@@ -26,6 +26,7 @@ Bully Python DoS Attack Tool
 * Threaded Killer version comming soon 
 * Illegal IP address bug fixed 
 * Fixed sockstress and syn flood bugs
+* CLI bug fixed 
 
 ## Legal Warning 
 
