@@ -24,7 +24,8 @@ Bully Python DoS Attack Tool
 * The XML-RPC feature has been added.
 * Argparse has been removed, and instead, a selection is provided using the "input" function
 * Threaded Killer version comming soon 
-
+* Illegal IP address bug fixed 
+* Fixed sockstress and syn flood bugs
 
 ## Legal Warning 
 
