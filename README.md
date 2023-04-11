@@ -30,8 +30,8 @@ Bully Python DoS Attack Tool
 * High-power attack using all processor cores.
 * KILL method added.
 * Illegal IP address bug fixed .
-* Fixed sockstress and syn flood bugs .
-
+* Sockstress and SYN flood bugs fixed .
+* SSL Handshake spam bug fixed.
 
 ## Legal Warning 
 
