@@ -5,16 +5,18 @@ Bully Python DoS Attack Tool
 * UDP Storm 
 * SYN Flood
 * ICMP Bomb
-* Ping Flood
+* ICMP Flood 
 * Sockstress 
 * Slowloris
-* Get Flood
+* Get 
 * PPS
-* Post Flood
+* Post 
 * XMLRPC 
+* KILL
 * SSL DoS(experimental)
 
-## UPDATE NOTES BULLY v1.1 
+## UPDATE NOTES BULLY v1.3
+ Bully is now more powerful than v1.1.
  
  The Bully Python DoS tool has been updated! The new version is now easier to use. Here are the update notes:
 * The Smurf attack feature has been removed because it was ineffective.
@@ -22,11 +24,14 @@ Bully Python DoS Attack Tool
 * The HTTP packet feature has been updated.
 * The overall structure has been converted to object-oriented programming.
 * The XML-RPC feature has been added.
-* Argparse has been removed, and instead, a selection is provided using the "input" function
-* Threaded Killer version comming soon 
-* Illegal IP address bug fixed 
-* Fixed sockstress and syn flood bugs
-* CLI bug fixed 
+* CLI reconfigured.
+* Argparse readded.
+* Multiprocessing added
+* High-power attack using all processor cores.
+* KILL method added.
+* Illegal IP address bug fixed .
+* Fixed sockstress and syn flood bugs .
+
 
 ## Legal Warning 
 
@@ -41,15 +46,9 @@ Clone
 ```
 
 
-Start Bully
-```bash
-  python Bully.py 
-```
-
-  
 Usage
 ```bash
-  python Bully.py <url> 
+  python Bully.py -target <url> -s <concurrent socket> 
 ```
 
 ## Lisans
