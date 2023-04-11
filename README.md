@@ -31,7 +31,7 @@ Bully Python DoS Attack Tool
 * KILL method added.
 * Illegal IP address bug fixed .
 * Sockstress and SYN flood bugs fixed .
-* SSL Handshake spam bug fixed.
+* SSL Handshake spam bug fixed and reconfigured.
 
 ## Legal Warning 
 
