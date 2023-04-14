@@ -1,5 +1,5 @@
 
-# Bully
+# Bully (UPDATE COMING SOON)
 
 Bully Python DoS Attack Tool 
 * UDP Storm 
