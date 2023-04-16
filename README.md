@@ -45,6 +45,7 @@ Bully 2.0 Update notes =>
 * Layer classes are defined as objects, and multiprocessing is only assigned to the worker class .
 * KILL method updated more powerful and controlable than old version. 
 * Outputs were made more orderly by removing unnecessary colors.
+* The number of CPU cores used is now optional.
 * Bully was generally optimized.
 * Custom method added.
 * Signal added.
