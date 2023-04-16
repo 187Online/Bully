@@ -51,6 +51,7 @@ Bully 2.0 Update notes =>
 * Signal added.
 * Process barrier added.
 * Error outputs were made more readable and controlable.
+* SSL bug fixed.
 
 ## Legal Warning 
 
