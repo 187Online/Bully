@@ -49,6 +49,7 @@ Bully 2.0 Update notes =>
 * Bully was generally optimized.
 * Custom method added.
 * Signal added.
+* Process barrier added.
 * Error outputs were made more readable and controlable.
 
 ## Legal Warning 
